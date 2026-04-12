@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>DIY Schedule</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#ffb6c1">
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="DIY Schedule">
+<link rel="apple-touch-icon" href="icon.png">
+
+<style>
+*{box-sizing:border-box;font-family:system-ui;}
+body{margin:0;background:#ffb6c1;}
+
+#splash{
+position:fixed;top:0;left:0;width:100%;height:100%;
+background:#ffb6c1;display:flex;align-items:center;justify-content:center;
+z-index:9999;text-align:center;
+}
+
+.splashText{font-family:cursive;color:#1f2a44;}
+.line1{font-size:34px;font-weight:700;}
+.line2{font-size:18px;margin-top:6px;}
+.line3{font-size:28px;margin-top:6px;font-weight:600;}
+
+.typewriter{
+border-right:3px solid #1f2a44;
+white-space:nowrap;
+overflow:hidden;
+width:0;
+display:inline-block;
+animation:typing 2s steps(12,end) forwards, blink .7s infinite;
+}
+
+.header{
+text-align:center;
+font-weight:1000;
+font-family:cursive;
+margin-bottom:20px;
+font-size: clamp(40px, 15vw, 60px);
+color:#1f2a44;
+}
+
+.container{max-width:1000px;margin:auto;padding:20px;}
+
+@keyframes typing{from{width:0}to{width:160px}}
+@keyframes blink{50%{border-color:transparent}}
+
+.card{
+background:white;
+padding:16px;
+border-radius:14px;
+margin-top:12px;
+box-shadow:0 8px 24px rgba(0,0,0,0.15);
+}
+
+label{
+font-size:13px;
+font-weight:600;
+color:#1f2a44;
+display:block;
+margin-top:10px;
+}
+
+input,select,button{
+width:100%;
+height:46px;
+padding:10px;
+margin-top:5px;
+border-radius:10px;
+border:1px solid #ddd;
+}
+
+button{
+background:#1f2a44;
+color:white;
+font-weight:600;
+cursor:pointer;
+}
+
+.tabs{display:flex;gap:10px;}
+.tabs button{flex:1;}
+
+.doc{
+background:#fff;
+padding:14px;
+border-radius:12px;
+margin-top:10px;
+border-left:5px solid #1f2a44;
+position:relative;
+}
+
+.badge{
+background:#1f2a44;
+color:white;
+padding:4px 10px;
+border-radius:999px;
+font-size:12px;
+}
+
+.iconBtn{
+position:absolute;
+top:10px;
+right:10px;
+display:flex;
+gap:8px;
+}
+
+.iconBtn button{
+width:35px;height:35px;
+border-radius:50%;
+padding:0;
+}
+
+.actionBtns{margin-top:10px;}
+</style>
+
+</head>
+
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div class="splashText">
+    <div class="line1">DIY Schedule</div>
+    <div class="line2">Made for</div>
+    <div class="line3 typewriter">Jiciel</div>
+  </div>
+</div>
+
+<div class="container" id="app" style="display:none">
+
+<div class="header">DIY Schedule</div>
+
+<div class="tabs">
+<button onclick="showTab('add')">Add</button>
+<button onclick="showTab('search')">Search</button>
+<button onclick="showTab('view')">View</button>
+</div>
+
+<!-- HOSPITAL -->
+<div id="hospitalManager" class="card">
+<h3>Hospital Manager</h3>
+
+<label>Hospital Name</label>
+<input id="newHospital">
+
+<button onclick="addHospital()">➕ Add Hospital</button>
+
+<div id="hospitalList"></div>
+</div>
+
+<!-- ADD -->
+<div id="add" class="card">
+
+<label>Name</label>
+<input id="name">
+
+<label>Category</label>
+<input id="category">
+
+<label>Hospital</label>
+<select id="hospitalSelect"></select>
+
+<button onclick="addHospitalToDoctor()">➕ Add Hospital Schedule</button>
+
+<div id="tempSchedules"></div>
+
+<button onclick="saveDoctor()">💾 Save Doctor</button>
+<button onclick="cancelEdit()" style="background:#777;">❌ Cancel</button>
+
+</div>
+
+<!-- SEARCH -->
+<div id="search" class="card" style="display:none">
+
+<label>Name</label>
+<input id="searchName">
+
+<label>Category</label>
+<input id="searchCategory">
+
+<label>Hospital</label>
+<select id="searchHospital"></select>
+
+<label>Day</label>
+<select id="searchDay">
+<option value="">All Days</option>
+<option>Monday</option>
+<option>Tuesday</option>
+<option>Wednesday</option>
+<option>Thursday</option>
+<option>Friday</option>
+<option>Saturday</option>
+<option>Sunday</option>
+</select>
+
+<button onclick="searchDoctors()">Search</button>
+
+<div id="results"></div>
+</div>
+
+<!-- VIEW -->
+<div id="view" class="card" style="display:none">
+
+<label>Select Day</label>
+<select id="viewDay" onchange="renderView()">
+<option>Monday</option>
+<option>Tuesday</option>
+<option>Wednesday</option>
+<option>Thursday</option>
+<option>Friday</option>
+<option>Saturday</option>
+<option>Sunday</option>
+</select>
+
+<div class="actionBtns">
+<button onclick="openFullReport()">📄 View Full Report</button>
+</div>
+
+<div id="viewBox"></div>
+
+</div>
+
+</div>
+
+<script>
+
+const days=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+
+let doctors=JSON.parse(localStorage.getItem("doctors")||"[]");
+let hospitals=JSON.parse(localStorage.getItem("hospitals")||"[]");
+
+let editIndex=null;
+
+function save(){
+localStorage.setItem("doctors",JSON.stringify(doctors));
+localStorage.setItem("hospitals",JSON.stringify(hospitals));
+}
+
+/* SPLASH */
+window.onload=()=>{
+renderHospitals();
+loadHospitals();
+loadSearchHospitals();
+
+setTimeout(()=>{
+document.getElementById("splash").style.display="none";
+document.getElementById("app").style.display="block";
+},2000);
+};
+
+function showTab(tab){
+document.getElementById("add").style.display=tab==="add"?"block":"none";
+document.getElementById("search").style.display=tab==="search"?"block":"none";
+document.getElementById("view").style.display=tab==="view"?"block":"none";
+document.getElementById("hospitalManager").style.display=tab==="add"?"block":"none";
+
+if(tab==="add") loadHospitals();
+if(tab==="search") loadSearchHospitals();
+if(tab==="view") renderView();
+}
+
+/* HOSPITAL */
+function addHospital(){
+let name=document.getElementById("newHospital").value.trim();
+if(!name) return;
+
+if(hospitals.includes(name)) return alert("Exists");
+
+hospitals.push(name);
+save();
+document.getElementById("newHospital").value="";
+renderHospitals();
+loadHospitals();
+loadSearchHospitals();
+}
+
+function deleteHospital(i){
+
+if(!confirm("Are you sure you want to delete this hospital?")){
+return;
+}
+
+let removed=hospitals[i];
+hospitals.splice(i,1);
+
+doctors.forEach(d=>{
+d.hospitals=d.hospitals.filter(h=>h.name!==removed);
+});
+
+save();
+renderHospitals();
+loadHospitals();
+loadSearchHospitals();
+}
+
+
+function renderHospitals(){
+document.getElementById("hospitalList").innerHTML=
+hospitals.map((h,i)=>`
+<div style="display:flex;justify-content:space-between;padding:10px;background:#fff;margin-top:8px;border-radius:10px;">
+<span>🏥 ${h}</span>
+<button onclick="deleteHospital(${i})" style="width:35px;height:35px;border-radius:50%;background:#c0392b;color:#fff;">🗑</button>
+</div>
+`).join("");
+}
+
+/* DROPDOWN */
+function loadHospitals(){
+let sel=document.getElementById("hospitalSelect");
+sel.innerHTML="<option value=''>Select Hospital</option>";
+hospitals.forEach(h=>sel.innerHTML+=`<option>${h}</option>`);
+}
+
+function loadSearchHospitals(){
+let sel=document.getElementById("searchHospital");
+sel.innerHTML="<option value=''>All Hospitals</option>";
+hospitals.forEach(h=>sel.innerHTML+=`<option value="${h.toLowerCase()}">${h}</option>`);
+}
+
+/* ADD SCHEDULE */
+function addHospitalToDoctor(){
+let h=document.getElementById("hospitalSelect").value;
+if(!h) return;
+
+let block=document.createElement("div");
+block.className="card";
+
+block.innerHTML=`<b>${h}</b><div></div>`;
+
+days.forEach(d=>{
+block.querySelector("div").innerHTML+=`
+<div>
+<label>${d}</label>
+<input data-day="${d}" placeholder="Time">
+</div>`;
+});
+
+document.getElementById("tempSchedules").appendChild(block);
+}
+
+/* SAVE */
+function saveDoctor(){
+let name=document.getElementById("name").value.trim();
+let category=document.getElementById("category").value.trim();
+
+if(!name) return alert("Doctor name required");
+
+let blocks=document.querySelectorAll("#tempSchedules .card");
+let data=[];
+
+blocks.forEach(b=>{
+let hospital=b.querySelector("b").innerText;
+let schedule={};
+
+b.querySelectorAll("input").forEach(i=>{
+if(i.value) schedule[i.dataset.day]=i.value;
+});
+
+data.push({name:hospital,schedule});
+});
+
+let newDoctor={name,category,hospitals:data};
+
+if(editIndex!==null){
+doctors[editIndex]=newDoctor;
+editIndex=null;
+}else{
+doctors.push(newDoctor);
+}
+
+save();
+resetForm();
+alert("Saved!");
+}
+
+function resetForm(){
+document.getElementById("name").value="";
+document.getElementById("category").value="";
+document.getElementById("tempSchedules").innerHTML="";
+}
+
+/* CANCEL */
+function cancelEdit(){
+resetForm();
+editIndex=null;
+alert("Cancelled");
+}
+
+/* SEARCH (FIXED) */
+function searchDoctors(){
+
+let name=document.getElementById("searchName").value.toLowerCase();
+let category=document.getElementById("searchCategory").value.toLowerCase();
+let hospital=document.getElementById("searchHospital").value;
+let day=document.getElementById("searchDay").value;
+
+let filtered=doctors.filter(d=>{
+if(name && !d.name.toLowerCase().includes(name)) return false;
+if(category && !d.category.toLowerCase().includes(category)) return false;
+
+if(hospital){
+let hasHospital=(d.hospitals||[]).some(h=>h.name.toLowerCase()===hospital);
+if(!hasHospital) return false;
+}
+
+return true;
+});
+
+document.getElementById("results").innerHTML=
+filtered.map((d)=>{
+
+let realIndex = doctors.indexOf(d);
+
+let html=(d.hospitals||[])
+.filter(h=>!hospital || h.name.toLowerCase()===hospital)
+.map(h=>{
+let sched=Object.entries(h.schedule||{})
+.filter(s=>!day||s[0]===day);
+
+if(day && !sched.length) return "";
+
+return sched.length
+? `<div><b>🏥 ${h.name}</b><br>${sched.map(s=>`⏱ ${s[0]}: ${s[1]}`).join("<br>")}</div>`
+: "";
+}).join("");
+
+if(!html.trim()) return "";
+
+return `
+<div class="doc">
+<div class="iconBtn">
+<button onclick="editDoctor(${realIndex})">✏️</button>
+<button onclick="deleteDoctor(${realIndex})">🗑</button>
+</div>
+
+<span class="badge">${d.category || "General"}</span><br><br>
+<b>👨‍⚕️ ${d.name}</b>
+${html}
+</div>`;
+}).join("");
+}
+
+/* EDIT */
+function editDoctor(i){
+let d=doctors[i];
+editIndex=i;
+
+document.getElementById("name").value=d.name;
+document.getElementById("category").value=d.category;
+document.getElementById("tempSchedules").innerHTML="";
+
+(d.hospitals||[]).forEach(h=>{
+let block=document.createElement("div");
+block.className="card";
+
+block.innerHTML=`<b>${h.name}</b><div></div>`;
+
+days.forEach(day=>{
+block.querySelector("div").innerHTML+=`
+<div>
+<label>${day}</label>
+<input data-day="${day}" value="${h.schedule?.[day]||''}">
+</div>`;
+});
+
+document.getElementById("tempSchedules").appendChild(block);
+});
+
+showTab("add");
+}
+
+/* DELETE */
+function deleteDoctor(i){
+if(confirm("Are you sure you want to delete this doctor?")){
+doctors.splice(i,1);
+save();
+searchDoctors();
+renderView();
+}
+}
+
+/* VIEW */
+function renderView(){
+let day=document.getElementById("viewDay").value;
+
+let list=doctors.filter(d=>
+(d.hospitals||[]).some(h=>h.schedule?.[day])
+);
+
+document.getElementById("viewBox").innerHTML=
+list.map(d=>{
+let hospitalsHTML=(d.hospitals||[]).map(h=>{
+let sched=Object.entries(h.schedule||{})
+.filter(s=>s[0]===day)
+.map(s=>`⏱ ${s[0]}: ${s[1]}`).join("<br>");
+
+return sched ? `<div><b>🏥 ${h.name}</b><br>${sched}</div>` : "";
+}).join("");
+
+return `
+<div class="card">
+<span class="badge">${d.category||"General"}</span><br>
+<b>${d.name}</b>
+${hospitalsHTML}
+</div>`;
+}).join("")
+|| "<div class='card'>No schedules</div>";
+}
+
+/* FULL REPORT */
+function openFullReport(){
+let sorted=[...doctors].sort((a,b)=>a.name.localeCompare(b.name));
+let win=window.open("");
+
+win.document.write(`
+<h1>FULL DOCTOR REPORT</h1>
+${sorted.map(d=>`
+<div>
+<h3>${d.name}</h3>
+<p>${d.category}</p>
+${d.hospitals.map(h=>`
+<div><b>${h.name}</b><br>
+${Object.entries(h.schedule).map(s=>`${s[0]}: ${s[1]}`).join("<br>")}
+</div>`).join("<hr>")}
+</div>`).join("")}
+`);
+}
+
+/* PWA */
+if ("serviceWorker" in navigator) {
+navigator.serviceWorker.register("service-worker.js");
+}
+
+</script>
+
+</body>
+</html>
+
+
