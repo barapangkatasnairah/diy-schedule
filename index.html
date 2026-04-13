@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="DIY Schedule">
-<link rel="apple-touch-icon" href="icon.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 
 <style>
 *{box-sizing:border-box;font-family:system-ui;}
@@ -535,10 +535,14 @@ ${Object.entries(h.schedule).map(s=>`${s[0]}: ${s[1]}`).join("<br>")}
 }
 
 /* PWA */
+<script>
 if ("serviceWorker" in navigator) {
-navigator.serviceWorker.register("sw.js");
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js")
+      .then(() => console.log("Service Worker Registered"))
+      .catch(err => console.log("SW error:", err));
+  });
 }
-
 </script>
 
 </body>
