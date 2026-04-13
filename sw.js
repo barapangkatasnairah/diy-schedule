@@ -39,20 +39,22 @@ self.addEventListener("activate", event => {
 
 // FETCH
 self.addEventListener("fetch", event => {
+  if (event.request.method !== "GET") return;
+
   event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        return response || fetch(event.request)
-          .then(fetchRes => {
-            return caches.open(CACHE_NAME).then(cache => {
-              cache.put(event.request, fetchRes.clone());
-              return fetchRes;
-            });
-          })
-          .catch(() => {
-            // fallback (optional)
-            return caches.match("./index.html");
+    caches.match(event.request).then(response => {
+      if (response) return response;
+
+      return fetch(event.request)
+        .then(fetchRes => {
+          return caches.open(CACHE_NAME).then(cache => {
+            cache.put(event.request, fetchRes.clone());
+            return fetchRes;
           });
-      })
+        })
+        .catch(() => {
+          return caches.match("./index.html");
+        });
+    })
   );
 });
