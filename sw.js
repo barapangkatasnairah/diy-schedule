@@ -1,4 +1,4 @@
-const CACHE_NAME = "diy-schedule-v1";
+const CACHE_NAME = "diy-schedule-v2";
 
 const urlsToCache = [
   "./",
