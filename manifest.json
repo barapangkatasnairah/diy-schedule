@@ -1,8 +1,8 @@
 {
   "name": "DIY Schedule",
   "short_name": "Schedule",
-"start_url": ".",
-"scope": ".",
+"start_url": "./",
+"scope": "./",
   "display": "standalone",
   "background_color": "#ffb6c1",
   "theme_color": "#ffb6c1",
