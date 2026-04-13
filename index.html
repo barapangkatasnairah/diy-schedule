@@ -535,7 +535,6 @@ ${Object.entries(h.schedule).map(s=>`${s[0]}: ${s[1]}`).join("<br>")}
 }
 
 /* PWA */
-<script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("./sw.js")
