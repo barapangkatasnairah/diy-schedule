@@ -102,6 +102,8 @@ color:white;
 padding:4px 10px;
 border-radius:999px;
 font-size:12px;
+display:inline-block;
+margin-bottom:8px;
 }
 
 .iconBtn{
@@ -283,10 +285,7 @@ loadSearchHospitals();
 }
 
 function deleteHospital(i){
-
-if(!confirm("Are you sure you want to delete this hospital?")){
-return;
-}
+if(!confirm("Are you sure you want to delete this hospital?")) return;
 
 let removed=hospitals[i];
 hospitals.splice(i,1);
@@ -300,7 +299,6 @@ renderHospitals();
 loadHospitals();
 loadSearchHospitals();
 }
-
 
 function renderHospitals(){
 document.getElementById("hospitalList").innerHTML=
@@ -394,15 +392,15 @@ editIndex=null;
 alert("Cancelled");
 }
 
-/* SEARCH (FIXED) */
+/* SEARCH */
 function searchDoctors(){
-
 let name=document.getElementById("searchName").value.toLowerCase();
 let category=document.getElementById("searchCategory").value.toLowerCase();
 let hospital=document.getElementById("searchHospital").value;
 let day=document.getElementById("searchDay").value;
 
-let filtered = doctors.filter(d => {
+let filtered = doctors
+.filter(d => {
 if(name && !d.name.toLowerCase().includes(name)) return false;
 if(category && !d.category.toLowerCase().includes(category)) return false;
 
@@ -410,14 +408,12 @@ if(hospital){
 let hasHospital=(d.hospitals||[]).some(h=>h.name.toLowerCase()===hospital);
 if(!hasHospital) return false;
 }
-
 return true;
 })
-.sort((a,b)=>a.name.localeCompare(b.name)); // ✅ ADD THIS
+.sort((a,b)=>a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
 
 document.getElementById("results").innerHTML=
 filtered.map((d)=>{
-
 let realIndex = doctors.indexOf(d);
 
 let html=(d.hospitals||[])
@@ -492,9 +488,11 @@ renderView();
 function renderView(){
 let day=document.getElementById("viewDay").value;
 
-let list=doctors.filter(d=>
+let list=doctors
+.filter(d=>
 (d.hospitals||[]).some(h=>h.schedule?.[day])
-);
+)
+.sort((a,b)=>a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
 
 document.getElementById("viewBox").innerHTML=
 list.map(d=>{
@@ -508,8 +506,8 @@ return sched ? `<div><b>🏥 ${h.name}</b><br>${sched}</div>` : "";
 
 return `
 <div class="card">
-<span class="badge">${d.category||"General"}</span><br>
-<b>${d.name}</b>
+<span class="badge">${d.category || "General"}</span><br>
+<b>👨‍⚕️ ${d.name}</b>
 ${hospitalsHTML}
 </div>`;
 }).join("")
@@ -518,7 +516,10 @@ ${hospitalsHTML}
 
 /* FULL REPORT */
 function openFullReport(){
-let sorted=[...doctors].sort((a,b)=>a.name.localeCompare(b.name));
+let sorted=[...doctors].sort((a,b)=>
+a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+);
+
 let win=window.open("");
 
 win.document.write(`
@@ -537,15 +538,14 @@ ${Object.entries(h.schedule).map(s=>`${s[0]}: ${s[1]}`).join("<br>")}
 
 /* PWA */
 if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./sw.js", { scope: "./" })
-      .then(() => console.log("Service Worker Registered"))
-      .catch(err => console.log("SW error:", err));
-  });
+window.addEventListener("load", () => {
+navigator.serviceWorker.register("./sw.js", { scope: "./" })
+.then(() => console.log("Service Worker Registered"))
+.catch(err => console.log("SW error:", err));
+});
 }
+
 </script>
 
 </body>
 </html>
-
-
