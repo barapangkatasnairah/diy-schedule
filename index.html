@@ -402,7 +402,7 @@ let category=document.getElementById("searchCategory").value.toLowerCase();
 let hospital=document.getElementById("searchHospital").value;
 let day=document.getElementById("searchDay").value;
 
-let filtered=doctors.filter(d=>{
+let filtered = doctors.filter(d => {
 if(name && !d.name.toLowerCase().includes(name)) return false;
 if(category && !d.category.toLowerCase().includes(category)) return false;
 
@@ -412,7 +412,8 @@ if(!hasHospital) return false;
 }
 
 return true;
-});
+})
+.sort((a,b)=>a.name.localeCompare(b.name)); // ✅ ADD THIS
 
 document.getElementById("results").innerHTML=
 filtered.map((d)=>{
