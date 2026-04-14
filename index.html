@@ -10,8 +10,9 @@
 <meta name="theme-color" content="#ffb6c1">
 
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="DIY Schedule">
+<meta name="mobile-web-app-capable" content="yes">
 <link rel="apple-touch-icon" href="icon-192.png">
 
 <style>
@@ -38,9 +39,6 @@ display:inline-block;
 animation:typing 2s steps(12,end) forwards, blink .7s infinite;
 }
 
-@keyframes typing{from{width:0}to{width:160px}}
-@keyframes blink{50%{border-color:transparent}}
-
 .header{
 text-align:center;
 font-weight:1000;
@@ -52,12 +50,85 @@ color:#1f2a44;
 
 .container{max-width:1000px;margin:auto;padding:20px;}
 
+@keyframes typing{from{width:0}to{width:160px}}
+@keyframes blink{50%{border-color:transparent}}
+
+/* UPDATED CARD */
+.doc{
+background:white;
+padding:18px;
+border-radius:16px;
+margin-top:14px;
+box-shadow:0 8px 20px rgba(0,0,0,0.12);
+position:relative;
+transition:0.25s;
+display:flex;
+gap:14px;
+align-items:flex-start;
+overflow:hidden;
+}
+
+/* TEXT STRUCTURE */
+.doc .info{
+flex:1;
+line-height:1.4;
+}
+  
+input[type="time"]{
+height:40px;
+padding:6px;
+font-size:14px;
+}
+
+.doc .name{
+font-size:20px;
+font-weight:700;
+color:#1f2a44;
+}
+
+.doc .category{
+font-size:13px;
+color:#666;
+margin-bottom:6px;
+}
+
+.doc .hospital{
+margin-top:8px;
+font-size:14px;
+}
+
+/* SWIPE ACTION BUTTONS */
+.iconBtn{
+position:absolute;
+top:0;
+right:-90px;
+height:100%;
+display:flex;
+flex-direction:column;
+justify-content:center;
+gap:10px;
+transition:0.3s;
+}
+
+.doc.show-actions .iconBtn{
+right:10px;
+}
+
+.iconBtn button{
+width:38px;
+height:38px;
+border-radius:50%;
+padding:0;
+font-size:16px;
+}
+
+/* OTHER UI */
 .card{
 background:white;
 padding:16px;
 border-radius:14px;
 margin-top:12px;
-box-shadow:0 8px 24px rgba(0,0,0,0.15);
+box-shadow:0 6px 18px rgba(0,0,0,0.1);
 }
 
 label{
@@ -78,23 +149,21 @@ border:1px solid #ddd;
 }
 
 button{
-background:#1f2a44;
+background:linear-gradient(135deg,#1f2a44,#2c3e50);
 color:white;
 font-weight:600;
 cursor:pointer;
+border:none;
+transition:0.2s;
+}
+
+button:hover{
+opacity:0.9;
+transform:scale(1.02);
 }
 
 .tabs{display:flex;gap:10px;}
 .tabs button{flex:1;}
-
-.doc{
-background:#fff;
-padding:14px;
-border-radius:12px;
-margin-top:10px;
-border-left:5px solid #1f2a44;
-position:relative;
-}
 
 .badge{
 background:#1f2a44;
@@ -106,30 +175,6 @@ display:inline-block;
 margin-bottom:8px;
 }
 
-.iconBtn{
-position:absolute;
-top:10px;
-right:10px;
-display:flex;
-gap:8px;
-}
-
-.iconBtn button{
-width:35px;height:35px;
-border-radius:50%;
-padding:0;
-}
-
-.profile{
-width:70px;
-height:70px;
-border-radius:50%;
-object-fit:cover;
-margin-bottom:10px;
-border:2px solid #1f2a44;
-cursor:pointer;
-}
-
 .actionBtns{margin-top:10px;}
 </style>
 
@@ -137,13 +182,16 @@ cursor:pointer;
 
 <body>
 
-<!-- SPLASH -->
+<div id="imgModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:9999;justify-content:center;align-items:center;">
+<img id="modalImg" style="max-width:90%;max-height:90%;border-radius:12px;">
+</div>
+
 <div id="splash">
-  <div class="splashText">
-    <div class="line1">DIY Schedule</div>
-    <div class="line2">Made for</div>
-    <div class="line3 typewriter">Jiciel</div>
-  </div>
+<div class="splashText">
+<div class="line1">DIY Schedule</div>
+<div class="line2">Made for</div>
+<div class="line3 typewriter">Jiciel</div>
+</div>
 </div>
 
 <div class="container" id="app" style="display:none">
@@ -156,19 +204,14 @@ cursor:pointer;
 <button onclick="showTab('view')">View</button>
 </div>
 
-<!-- HOSPITAL MANAGER -->
 <div id="hospitalManager" class="card">
 <h3>Hospital Manager</h3>
-
 <label>Hospital Name</label>
 <input id="newHospital">
-
 <button onclick="addHospital()">➕ Add Hospital</button>
-
 <div id="hospitalList"></div>
 </div>
 
-<!-- ADD -->
 <div id="add" class="card">
 
 <label>Name</label>
@@ -178,7 +221,7 @@ cursor:pointer;
 <input id="category">
 
 <label>Profile Picture</label>
-<input type="file" id="photo" accept="image/*">
+<input type="file" id="profilePic" accept="image/*">
 
 <label>Hospital</label>
 <select id="hospitalSelect"></select>
@@ -192,7 +235,6 @@ cursor:pointer;
 
 </div>
 
-<!-- SEARCH -->
 <div id="search" class="card" style="display:none">
 
 <label>Name</label>
@@ -221,7 +263,6 @@ cursor:pointer;
 <div id="results"></div>
 </div>
 
-<!-- VIEW -->
 <div id="view" class="card" style="display:none">
 
 <label>Select Day</label>
@@ -245,11 +286,6 @@ cursor:pointer;
 
 </div>
 
-<!-- IMAGE MODAL -->
-<div id="imgModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);align-items:center;justify-content:center;z-index:9999;">
-<img id="modalImg" style="max-width:90%;max-height:90%;border-radius:12px;">
-</div>
-
 <script>
 
 const days=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
@@ -258,15 +294,14 @@ let doctors=JSON.parse(localStorage.getItem("doctors")||"[]");
 let hospitals=JSON.parse(localStorage.getItem("hospitals")||"[]");
 
 let editIndex=null;
+let tempSchedules=[];
 
 function save(){
 localStorage.setItem("doctors",JSON.stringify(doctors));
 localStorage.setItem("hospitals",JSON.stringify(hospitals));
 }
 
-/* SPLASH */
 window.onload=()=>{
-renderHospitals();
 loadHospitals();
 loadSearchHospitals();
 
@@ -287,250 +322,466 @@ if(tab==="search") loadSearchHospitals();
 if(tab==="view") renderView();
 }
 
-/* IMAGE ZOOM */
-function openImage(src){
-document.getElementById("modalImg").src=src;
-document.getElementById("imgModal").style.display="flex";
-}
+/* ================= HOSPITAL ================= */
 
-document.getElementById("imgModal").onclick=function(){
-this.style.display="none";
-};
-
-/* HOSPITAL */
 function addHospital(){
 let name=document.getElementById("newHospital").value.trim();
 if(!name) return;
-
 if(hospitals.includes(name)) return alert("Exists");
 
 hospitals.push(name);
 save();
+
 document.getElementById("newHospital").value="";
-renderHospitals();
+alert("Saved!");
+
 loadHospitals();
 loadSearchHospitals();
 }
 
-function deleteHospital(i){
-if(!confirm("Delete hospital?")) return;
-
-let removed=hospitals[i];
-hospitals.splice(i,1);
-
-doctors.forEach(d=>{
-d.hospitals=d.hospitals.filter(h=>h.name!==removed);
-});
-
-save();
-renderHospitals();
-loadHospitals();
-loadSearchHospitals();
-}
-
-function renderHospitals(){
-
-// ✅ SORT ALPHABETICALLY
-let sorted = [...hospitals].sort((a,b)=>a.localeCompare(b));
-
-document.getElementById("hospitalList").innerHTML=
-sorted.map(h=>{
-
-// get original index (for delete to still work)
-let i = hospitals.indexOf(h);
-
-return `
-<div style="display:flex;justify-content:space-between;padding:10px;background:#fff;margin-top:8px;border-radius:10px;">
-<span>🏥 ${h}</span>
-<button onclick="deleteHospital(${i})" style="width:35px;height:35px;border-radius:50%;background:#c0392b;color:#fff;">🗑</button>
-</div>
-`;
-}).join("");
-}
-
-/* DROPDOWN */
 function loadHospitals(){
 let sel=document.getElementById("hospitalSelect");
+let sorted=[...hospitals].sort((a,b)=>a.toLowerCase().localeCompare(b.toLowerCase()));
+
 sel.innerHTML="<option value=''>Select Hospital</option>";
-hospitals.forEach(h=>sel.innerHTML+=`<option>${h}</option>`);
+sorted.forEach(h=>sel.innerHTML+=`<option>${h}</option>`);
 }
 
 function loadSearchHospitals(){
 let sel=document.getElementById("searchHospital");
+let sorted=[...hospitals].sort((a,b)=>a.toLowerCase().localeCompare(b.toLowerCase()));
+
 sel.innerHTML="<option value=''>All Hospitals</option>";
-
-[...hospitals]
-.sort((a,b)=>a.localeCompare(b))
-.forEach(h=>sel.innerHTML+=`<option value="${h.toLowerCase()}">${h}</option>`);
+sorted.forEach(h=>sel.innerHTML+=`<option value="${h.toLowerCase()}">${h}</option>`);
 }
 
-/* ADD SCHEDULE */
+/* ================= SCHEDULE BUILDER ================= */
+
 function addHospitalToDoctor(){
-let h=document.getElementById("hospitalSelect").value;
-if(!h) return;
+let hospital=document.getElementById("hospitalSelect").value;
+if(!hospital) return alert("Select hospital");
 
-let block=document.createElement("div");
-block.className="card";
-
-block.innerHTML=`<b>${h}</b><div></div>`;
-
-days.forEach(d=>{
-block.querySelector("div").innerHTML+=`
-<div>
-<label>${d}</label>
-<input data-day="${d}" placeholder="Time">
-</div>`;
-});
-
-document.getElementById("tempSchedules").appendChild(block);
+// prevent duplicate hospital entry
+if(tempSchedules.some(h=>h.name===hospital)){
+return alert("Hospital already added");
 }
 
-/* SAVE */
-function saveDoctor(){
-let name=document.getElementById("name").value.trim();
-let category=document.getElementById("category").value.trim();
-let photoInput=document.getElementById("photo");
-
-if(!name) return alert("Doctor name required");
-
-let blocks=document.querySelectorAll("#tempSchedules .card");
-let data=[];
-
-blocks.forEach(b=>{
-let hospital=b.querySelector("b").innerText;
+// create empty schedule first
 let schedule={};
 
-b.querySelectorAll("input").forEach(i=>{
-if(i.value) schedule[i.dataset.day]=i.value;
+// create inputs UI dynamically
+let builderHTML = `
+<div class="card">
+<b>${hospital}</b>
+<div style="margin-top:10px;">
+${days.map(day=>`
+<div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+    
+<span style="width:90px;">${day}</span>
+<input type="time" id="start_${day}" style="width:45%;">
+<input type="time" id="end_${day}" style="width:45%;">
+</div>
+`).join("")}
+</div>
+
+<button onclick="saveTempSchedule('${hospital}')">✅ Save Schedule</button>
+</div>
+`;
+
+document.getElementById("tempSchedules").innerHTML = builderHTML;
+}
+function renderTempSchedules(){
+let box=document.getElementById("tempSchedules");
+
+box.innerHTML=tempSchedules.map((h,i)=>`
+<div class="card">
+
+<div style="display:flex;justify-content:space-between;align-items:center;">
+<b>🏥 ${h.name}</b>
+<button onclick="removeHospital(${i})" 
+style="background:#e74c3c;width:auto;padding:6px 10px;font-size:12px;">
+🗑 Remove
+</button>
+</div>
+
+${days.map(day=>{
+let val=h.schedule[day] || "";
+let start="", end="";
+
+if(val.includes("-")){
+let parts=val.split(" - ");
+start=convertTo24(parts[0]);
+end=convertTo24(parts[1]);
+}
+
+return `
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+<div style="width:90px;">${day}</div>
+
+<input type="time" id="start_${i}_${day}" value="${start}" style="flex:1;">
+<span style="font-size:12px;">to</span>
+<input type="time" id="end_${i}_${day}" value="${end}" style="flex:1;">
+</div>
+`;
+}).join("")}
+
+<button onclick="saveEditedSchedule(${i})" style="margin-top:8px;">
+💾 Save Schedule
+</button>
+
+</div>
+`).join("");
+}function removeHospital(index){
+
+if(!confirm("Remove this hospital schedule?")) return;
+
+// remove from tempSchedules only
+tempSchedules.splice(index,1);
+
+// refresh UI
+renderTempSchedules();
+}
+  
+  //save function  
+function saveEditedSchedule(index){
+
+let updatedSchedule={};
+
+days.forEach(day=>{
+let start=document.getElementById(`start_${index}_${day}`).value;
+let end=document.getElementById(`end_${index}_${day}`).value;
+
+if(start && end){
+updatedSchedule[day]=formatTime(start)+" - "+formatTime(end);
+}
 });
 
-data.push({name:hospital,schedule});
-});
+// prevent empty save
+if(Object.keys(updatedSchedule).length===0){
+return alert("No schedule entered");
+}
 
-const reader=new FileReader();
+// overwrite only this hospital schedule
+tempSchedules[index].schedule = updatedSchedule;
 
-reader.onload=function(e){
-let photo=e.target.result;
+alert("Schedule updated!");
 
-let newDoctor={name,category,hospitals:data,photo};
+renderTempSchedules();
+}
+/* ================= SAVE + EDIT ================= */
+
+function updateSchedule(index, day, value, type){
+
+let sched=tempSchedules[index].schedule[day] || "";
+
+let start="", end="";
+
+if(sched.includes("-")){
+let parts=sched.split(" - ");
+start=parts[0];
+end=parts[1];
+}
+
+// convert input to formatted time
+let formatted=formatTime(value);
+
+if(type==="start") start=formatted;
+if(type==="end") end=formatted;
+
+// if both exist → save
+if(start && end){
+tempSchedules[index].schedule[day]=`${start} - ${end}`;
+}else{
+tempSchedules[index].schedule[day]="";
+}
+}
+    
+function saveDoctor(){
+let name=document.getElementById("name").value.trim();
+if(!name) return alert("Name required");
+
+let category=document.getElementById("category").value;
+let file=document.getElementById("profilePic").files[0];
+
+function finalize(photo){
+
+let doctor={
+name,
+category,
+photo: photo || (editIndex!==null ? doctors[editIndex].photo : null),
+hospitals:tempSchedules
+};
 
 if(editIndex!==null){
-if(!photo) newDoctor.photo=doctors[editIndex].photo;
-doctors[editIndex]=newDoctor;
+doctors[editIndex]=doctor;
 editIndex=null;
 }else{
-doctors.push(newDoctor);
+doctors.push(doctor);
 }
 
 save();
-resetForm();
 alert("Saved!");
-};
+clearForm();
+}
 
-if(photoInput.files[0]){
-reader.readAsDataURL(photoInput.files[0]);
+if(file){
+let reader=new FileReader();
+reader.onload=e=>finalize(e.target.result);
+reader.readAsDataURL(file);
 }else{
-reader.onload({target:{result:""}});
+finalize(null);
 }
 }
 
-function resetForm(){
-document.getElementById("name").value="";
-document.getElementById("category").value="";
-document.getElementById("photo").value="";
-document.getElementById("tempSchedules").innerHTML="";
+function editDoctor(i){
+let d=doctors[i];
+editIndex=i;
+
+// fill basic info
+document.getElementById("name").value=d.name;
+document.getElementById("category").value=d.category;
+
+// clone schedules safely
+tempSchedules = JSON.parse(JSON.stringify(d.hospitals || []));
+
+// render schedules immediately
+renderTempSchedules();
+
+// go to Add tab
+showTab("add");
 }
 
 function cancelEdit(){
-resetForm();
 editIndex=null;
+clearForm();
 }
 
-/* SEARCH FIXED */
+function clearForm(){
+document.getElementById("name").value="";
+document.getElementById("category").value="";
+document.getElementById("profilePic").value="";
+
+tempSchedules=[];
+renderTempSchedules();
+}
+
+/* ================= SEARCH ================= */
+
 function searchDoctors(){
 let name=document.getElementById("searchName").value.toLowerCase();
 let category=document.getElementById("searchCategory").value.toLowerCase();
 let hospital=document.getElementById("searchHospital").value;
 let day=document.getElementById("searchDay").value;
 
-let filtered = doctors.filter(d=>{
+let filtered=doctors.filter(d=>{
 if(name && !d.name.toLowerCase().includes(name)) return false;
-if(category && !d.category.toLowerCase().includes(category)) return false;
+if(category){
+let doctorCategory = (d.category || "").toLowerCase().trim();
+let searchCategory = category.trim();
 
-if(hospital){
-return d.hospitals.some(h=>h.name.toLowerCase()===hospital);
+if(!doctorCategory.includes(searchCategory)) return false;
 }
+if(hospital){
+let has=(d.hospitals||[]).some(h=>h.name.toLowerCase()===hospital);
+if(!has) return false;
+}
+
+// NEW: check if schedule matches day (if day selected)
+if(day){
+let hasDay=(d.hospitals||[]).some(h=>h.schedule && h.schedule[day]);
+if(!hasDay) return false;
+}
+
 return true;
-});
+}).sort((a,b)=>a.name.localeCompare(b.name));
 
-document.getElementById("results").innerHTML=
+document.getElementById("results").innerHTML =
 filtered.map(d=>{
-
 let realIndex=doctors.indexOf(d);
 
-let html=d.hospitals.map(h=>{
+let html=(d.hospitals||[])
+.filter(h => !hospital || h.name.toLowerCase() === hospital)
+.map(h=>{
 let sched=Object.entries(h.schedule||{})
-.filter(s=>!day||s[0]===day);
+.filter(s=>!day || s[0]===day);
 
 if(!sched.length) return "";
 
-return `<div><b>🏥 ${h.name}</b><br>${sched.map(s=>`⏱ ${s[0]}: ${s[1]}`).join("<br>")}</div>`;
+return `
+<div>
+<b>🏥 ${h.name}</b><br>
+${sched.map(s=>`${s[0]}: ${s[1]}`).join("<br>")}
+</div>
+`;
 }).join("");
-
-if(!html) return "";
 
 return `
 <div class="doc">
+<img src="${d.photo || 'https://via.placeholder.com/70'}"
+onclick="zoomImage(this.src)"
+style="width:70px;height:70px;border-radius:50%;object-fit:cover;cursor:pointer;">
+
+<div class="info">
+<div class="category">${d.category||"General"}</div>
+<div class="name">${d.name}</div>
+<div class="hospital">
+${html || "<i>No schedule available</i>"}
+</div>
+</div>
 
 <div class="iconBtn">
 <button onclick="editDoctor(${realIndex})">✏️</button>
 <button onclick="deleteDoctor(${realIndex})">🗑</button>
 </div>
-
-<img src="${d.photo || 'https://via.placeholder.com/70'}"
-class="profile"
-onclick="openImage(this.src)">
-
-<span class="badge">${d.category || "General"}</span><br>
-<b>👨‍⚕️ ${d.name}</b>
-${html}
-
 </div>`;
-}).join("");
+}).join("") || "<p>No results found</p>";
 }
+ 
 
-/* EDIT */
-function editDoctor(i){
-let d=doctors[i];
-editIndex=i;
 
-document.getElementById("name").value=d.name;
-document.getElementById("category").value=d.category;
-document.getElementById("tempSchedules").innerHTML="";
+/* ================= VIEW ================= */
+function saveTempSchedule(hospital){
 
-(d.hospitals||[]).forEach(h=>{
-let block=document.createElement("div");
-block.className="card";
-
-block.innerHTML=`<b>${h.name}</b><div></div>`;
+let schedule={};
 
 days.forEach(day=>{
-block.querySelector("div").innerHTML+=`
-<div>
-<label>${day}</label>
-<input data-day="${day}" value="${h.schedule?.[day]||''}">
-</div>`;
+let start=document.getElementById("start_"+day)?.value;
+let end=document.getElementById("end_"+day)?.value;
+
+if(start && end){
+schedule[day]=formatTime(start)+" - "+formatTime(end);
+}
 });
 
-document.getElementById("tempSchedules").appendChild(block);
-});
-
-showTab("add");
+if(Object.keys(schedule).length===0){
+return alert("Enter at least one schedule");
 }
 
-/* DELETE */
+tempSchedules.push({
+name:hospital,
+schedule:schedule
+});
+
+// clear builder UI after save
+document.getElementById("tempSchedules").innerHTML="";
+
+renderTempSchedules();
+}
+    function formatTime(t){
+let [h,m]=t.split(":");
+h=parseInt(h);
+
+let ampm = h >= 12 ? "PM" : "AM";
+h = h % 12 || 12;
+
+return `${h}:${m} ${ampm}`;
+}
+    
+function renderView(){
+let day=document.getElementById("viewDay").value;
+
+let html=doctors.map(d=>{
+
+let entries=(d.hospitals||[]).map(h=>{
+if(h.schedule[day]){
+return `
+<div style="margin-top:6px;">
+<div><b>🏥 ${h.name}</b></div>
+<div>${day}: ${h.schedule[day]}</div>
+</div>
+`;
+}
+return "";
+}).join("");
+
+if(!entries) return "";
+
+return `
+<div class="doc">
+<img src="${d.photo || 'https://via.placeholder.com/70'}"
+style="width:70px;height:70px;border-radius:50%;object-fit:cover;">
+
+<div class="info">
+
+<div class="badge">${d.category || "General"}</div>
+
+<div class="name">${d.name}</div>
+
+<div class="hospital">
+${entries}
+</div>
+
+</div>
+</div>
+`;
+}).join("");
+
+document.getElementById("viewBox").innerHTML =
+html || "<p>No schedules for this day</p>";
+}
+
+/* ================= REPORT ================= */
+
+function openFullReport(){
+let win=window.open("","_blank");
+
+let content=`
+<html>
+<head>
+<title>Report</title>
+<style>
+body{font-family:sans-serif;padding:20px;}
+h2{border-bottom:2px solid #000;}
+</style>
+</head>
+<body>
+<h1>Doctor Schedule Report</h1>
+`;
+
+doctors.forEach(d=>{
+content+=`<h2>${d.name} (${d.category})</h2>`;
+
+(d.hospitals||[]).forEach(h=>{
+content+=`<b>${h.name}</b><br>`;
+content+=Object.entries(h.schedule||{})
+.map(s=>`${s[0]}: ${s[1]}`).join("<br>");
+content+="<br><br>";
+});
+});
+
+content+=`
+<script>window.print()<\/script>
+</body></html>`;
+
+win.document.write(content);
+win.document.close();
+}
+
+/* ================= SWIPE ================= */
+
+let startX=0;
+
+document.addEventListener("touchstart",e=>{
+if(e.target.closest(".doc")){
+startX=e.touches[0].clientX;
+}
+});
+
+document.addEventListener("touchend",e=>{
+let card=e.target.closest(".doc");
+if(!card) return;
+
+let endX=e.changedTouches[0].clientX;
+let diff=startX-endX;
+
+if(diff>50) card.classList.add("show-actions");
+if(diff<-50) card.classList.remove("show-actions");
+});
+
+/* ================= DELETE ================= */
+
 function deleteDoctor(i){
-if(confirm("Delete doctor?")){
+if(confirm("Delete this doctor?")){
 doctors.splice(i,1);
 save();
 searchDoctors();
@@ -538,38 +789,34 @@ renderView();
 }
 }
 
-/* VIEW */
-function renderView(){
-let day=document.getElementById("viewDay").value;
+/* ================= IMAGE ================= */
 
-let list=doctors.filter(d=>
-d.hospitals.some(h=>h.schedule?.[day])
-);
+function zoomImage(src){
+document.getElementById("modalImg").src=src;
+document.getElementById("imgModal").style.display="flex";
+}
 
-document.getElementById("viewBox").innerHTML=
-list.map(d=>{
-let html=d.hospitals.map(h=>{
-let sched=Object.entries(h.schedule||{})
-.filter(s=>s[0]===day);
+document.getElementById("imgModal").onclick=function(){
+this.style.display="none";
+}
+function convertTo24(timeStr){
+if(!timeStr) return "";
 
-if(!sched.length) return "";
+let [time, ampm] = timeStr.split(" ");
+let [h, m] = time.split(":");
 
-return `<div><b>🏥 ${h.name}</b><br>${sched.map(s=>`⏱ ${s[0]}: ${s[1]}`).join("<br>")}</div>`;
-}).join("");
+h = parseInt(h);
 
-return `
-<div class="card">
+if(ampm === "PM" && h !== 12) h += 12;
+if(ampm === "AM" && h === 12) h = 0;
 
-<img src="${d.photo || 'https://via.placeholder.com/70'}"
-class="profile"
-onclick="openImage(this.src)">
+return `${h.toString().padStart(2,"0")}:${m}`;
+}
 
-<span class="badge">${d.category || "General"}</span><br>
-<b>👨‍⚕️ ${d.name}</b>
-${html}
+/* ================= PWA ================= */
 
-</div>`;
-}).join("") || "<div class='card'>No schedules</div>";
+if("serviceWorker" in navigator){
+navigator.serviceWorker.register("sw.js");
 }
 
 </script>
