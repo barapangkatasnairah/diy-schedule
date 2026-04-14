@@ -319,7 +319,7 @@ firebase.initializeApp(firebaseConfig);
 
 const auth = firebase.auth();
 const db = firebase.firestore();
-
+  
 // Enable offline mode
 db.enablePersistence().catch((err)=>{
 console.log("Offline error:", err);
