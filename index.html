@@ -15,6 +15,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="apple-touch-icon" href="icon-192.png">
 
+  
 <style>
 *{box-sizing:border-box;font-family:system-ui;}
 body{margin:0;background:#ffb6c1;}
@@ -181,6 +182,15 @@ margin-bottom:8px;
 </head>
 
 <body>
+  
+<div id="authBox" class="card" style="margin:20px;">
+<h3>Login</h3>
+<input id="email" placeholder="Email">
+<input id="password" type="password" placeholder="Password">
+<button onclick="login()">Login</button>
+<button onclick="register()">Register</button>
+</div>
+  
 
 <div id="imgModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:9999;justify-content:center;align-items:center;">
 <img id="modalImg" style="max-width:90%;max-height:90%;border-radius:12px;">
@@ -288,9 +298,32 @@ margin-bottom:8px;
 </div>
 
 </div>
-
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  
 <script>
 
+const firebaseConfig = {
+  apiKey: "AIzaSyDr2xKS99QtMRVwDom64BirP4vM8t_kCsI",
+  authDomain: "diys-42017.firebaseapp.com",
+  projectId: "diys-42017",
+  storageBucket: "diys-42017.firebasestorage.app",
+  messagingSenderId: "542286889046",
+  appId: "1:542286889046:web:9f8ba2d583bb38e8153bf7",
+  
+};
+
+// Initialize Firebase (COMPAT VERSION)
+firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// Enable offline mode
+db.enablePersistence().catch((err)=>{
+console.log("Offline error:", err);
+});
 const days=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
 
 let doctors=JSON.parse(localStorage.getItem("doctors")||"[]");
@@ -300,20 +333,74 @@ let editIndex=null;
 let tempSchedules=[];
 
 function save(){
-localStorage.setItem("doctors",JSON.stringify(doctors));
-localStorage.setItem("hospitals",JSON.stringify(hospitals));
+let user = auth.currentUser;
+if(!user) return;
+
+db.collection("users").doc(user.uid).set({
+doctors,
+hospitals
+});
 }
 
 window.onload=()=>{
 loadHospitals();
 loadSearchHospitals();
 
+// app hidden until login
+document.getElementById("app").style.display="none";
+
 setTimeout(()=>{
 document.getElementById("splash").style.display="none";
-document.getElementById("app").style.display="block";
 },2000);
 };
+  
+  function register(){
+let email = document.getElementById("email").value;
+let password = document.getElementById("password").value;
 
+auth.createUserWithEmailAndPassword(email,password)
+.then(()=>alert("Registered!"))
+.catch(e=>alert(e.message));
+}
+function loadFromCloud(){
+let user = auth.currentUser;
+if(!user) return;
+
+db.collection("users").doc(user.uid)
+.onSnapshot(doc=>{
+if(doc.exists){
+let data = doc.data();
+doctors = data.doctors || [];
+hospitals = data.hospitals || [];
+
+renderView();
+searchDoctors();
+loadHospitals();
+loadSearchHospitals();
+}
+});
+}
+  
+function login(){
+let email = document.getElementById("email").value;
+let password = document.getElementById("password").value;
+
+auth.signInWithEmailAndPassword(email,password)
+.then(()=>alert("Logged in!"))
+.catch(e=>alert(e.message));
+}
+auth.onAuthStateChanged(user=>{
+if(user){
+document.getElementById("authBox").style.display="none";
+document.getElementById("app").style.display="block";
+
+loadFromCloud();
+}else{
+document.getElementById("authBox").style.display="block";
+document.getElementById("app").style.display="none";
+}
+});
+  
 function showTab(tab){
 document.getElementById("add").style.display=tab==="add"?"block":"none";
 document.getElementById("search").style.display=tab==="search"?"block":"none";
