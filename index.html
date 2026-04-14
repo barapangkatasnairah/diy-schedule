@@ -329,13 +329,23 @@ loadSearchHospitals();
 }
 
 function renderHospitals(){
+
+// ✅ SORT ALPHABETICALLY
+let sorted = [...hospitals].sort((a,b)=>a.localeCompare(b));
+
 document.getElementById("hospitalList").innerHTML=
-hospitals.map((h,i)=>`
+sorted.map(h=>{
+
+// get original index (for delete to still work)
+let i = hospitals.indexOf(h);
+
+return `
 <div style="display:flex;justify-content:space-between;padding:10px;background:#fff;margin-top:8px;border-radius:10px;">
 <span>🏥 ${h}</span>
 <button onclick="deleteHospital(${i})" style="width:35px;height:35px;border-radius:50%;background:#c0392b;color:#fff;">🗑</button>
 </div>
-`).join("");
+`;
+}).join("");
 }
 
 /* DROPDOWN */
@@ -348,7 +358,10 @@ hospitals.forEach(h=>sel.innerHTML+=`<option>${h}</option>`);
 function loadSearchHospitals(){
 let sel=document.getElementById("searchHospital");
 sel.innerHTML="<option value=''>All Hospitals</option>";
-hospitals.forEach(h=>sel.innerHTML+=`<option value="${h.toLowerCase()}">${h}</option>`);
+
+[...hospitals]
+.sort((a,b)=>a.localeCompare(b))
+.forEach(h=>sel.innerHTML+=`<option value="${h.toLowerCase()}">${h}</option>`);
 }
 
 /* ADD SCHEDULE */
