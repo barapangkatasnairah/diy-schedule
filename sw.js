@@ -1,4 +1,4 @@
-const CACHE_NAME = "diy-schedule-v2";
+const CACHE_NAME = "diy-schedule-v1";
 
 const urlsToCache = [
   "./",
@@ -8,53 +8,32 @@ const urlsToCache = [
   "./icon-512.png"
 ];
 
-// INSTALL
+// Install
 self.addEventListener("install", event => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log("Caching app shell");
-        return cache.addAll(urlsToCache);
-      })
+    caches.open(CACHE_NAME).then(cache => {
+      return cache.addAll(urlsToCache);
+    })
   );
-  self.skipWaiting();
 });
 
-// ACTIVATE
+// Activate (cleanup old cache)
 self.addEventListener("activate", event => {
   event.waitUntil(
-    caches.keys().then(cacheNames => {
+    caches.keys().then(keys => {
       return Promise.all(
-        cacheNames.map(cache => {
-          if (cache !== CACHE_NAME) {
-            console.log("Deleting old cache:", cache);
-            return caches.delete(cache);
-          }
-        })
+        keys.filter(key => key !== CACHE_NAME)
+            .map(key => caches.delete(key))
       );
     })
   );
-  self.clients.claim();
 });
 
-// FETCH
+// Fetch (offline support)
 self.addEventListener("fetch", event => {
-  if (event.request.method !== "GET") return;
-
   event.respondWith(
     caches.match(event.request).then(response => {
-      if (response) return response;
-
-      return fetch(event.request)
-        .then(fetchRes => {
-          return caches.open(CACHE_NAME).then(cache => {
-            cache.put(event.request, fetchRes.clone());
-            return fetchRes;
-          });
-        })
-        .catch(() => {
-          return caches.match("./index.html");
-        });
+      return response || fetch(event.request);
     })
   );
 });
