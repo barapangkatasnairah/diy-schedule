@@ -235,19 +235,22 @@ margin-bottom:8px;
 
 </div>
 
+<!-- ONLY showing the UPDATED parts to avoid breaking your long code -->
+
+<!-- ================= SEARCH TAB (UPDATED) ================= -->
 <div id="search" class="card" style="display:none">
 
 <label>Name</label>
-<input id="searchName">
+<input id="searchName" oninput="liveSearch()">
 
 <label>Category</label>
-<input id="searchCategory">
+<input id="searchCategory" oninput="liveSearch()">
 
 <label>Hospital</label>
-<select id="searchHospital"></select>
+<select id="searchHospital" onchange="searchDoctors()"></select>
 
 <label>Day</label>
-<select id="searchDay">
+<select id="searchDay" onchange="searchDoctors()">
 <option value="">All Days</option>
 <option>Monday</option>
 <option>Tuesday</option>
@@ -258,11 +261,11 @@ margin-bottom:8px;
 <option>Sunday</option>
 </select>
 
-<button onclick="searchDoctors()">Search</button>
+<!-- ❌ REMOVE BUTTON (optional) -->
+<!-- <button onclick="searchDoctors()">Search</button> -->
 
 <div id="results"></div>
 </div>
-
 <div id="view" class="card" style="display:none">
 
 <label>Select Day</label>
@@ -318,9 +321,21 @@ document.getElementById("view").style.display=tab==="view"?"block":"none";
 document.getElementById("hospitalManager").style.display=tab==="add"?"block":"none";
 
 if(tab==="add") loadHospitals();
-if(tab==="search") loadSearchHospitals();
+
+if(tab==="search"){
+loadSearchHospitals();
+searchDoctors(); // 🔥 auto show results
+}
+
 if(tab==="view") renderView();
 }
+  let searchTimeout;
+
+function liveSearch(){
+clearTimeout(searchTimeout);
+searchTimeout = setTimeout(searchDoctors, 300);
+}
+  
 
 /* ================= HOSPITAL ================= */
 
