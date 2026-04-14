@@ -81,6 +81,8 @@ padding:6px;
 font-size:14px;
 }
 
+
+
 .doc .name{
 font-size:20px;
 font-weight:700;
@@ -373,16 +375,29 @@ loadSearchHospitals();
 });
 }
   
-function isValidEmail(email){
-return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+function getCleanEmail(){
+return document.getElementById("email").value
+.trim()
+.toLowerCase();
+}
+document.getElementById("email").addEventListener("input", function(){
+this.value = this.value.replace(/\s/g, "");
+});
+function login(){
+let email = getCleanEmail();
+let password = document.getElementById("password").value.trim();
+ <input id="email" type="email" placeholder="Email" autocomplete="email"> 
+if(!email){
+return alert("Email is required");
 }
 
-function login(){
-let email = document.getElementById("email").value.trim();
-let password = document.getElementById("password").value;
-
 if(!isValidEmail(email)){
-return alert("Please enter a valid email (example@gmail.com)");
+return alert("Invalid email format (example@gmail.com)");
+}
+
+if(!password){
+return alert("Password is required");
 }
 
 auth.signInWithEmailAndPassword(email,password)
@@ -391,11 +406,15 @@ auth.signInWithEmailAndPassword(email,password)
 }
 
 function register(){
-let email = document.getElementById("email").value.trim();
-let password = document.getElementById("password").value;
+let email = getCleanEmail();
+let password = document.getElementById("password").value.trim();
+
+if(!email){
+return alert("Email is required");
+}
 
 if(!isValidEmail(email)){
-return alert("Please enter a valid email (example@gmail.com)");
+return alert("Invalid email format (example@gmail.com)");
 }
 
 if(password.length < 6){
