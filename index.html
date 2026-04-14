@@ -352,14 +352,8 @@ document.getElementById("splash").style.display="none";
 },2000);
 };
   
-  function register(){
-let email = document.getElementById("email").value;
-let password = document.getElementById("password").value;
-
-auth.createUserWithEmailAndPassword(email,password)
-.then(()=>alert("Registered!"))
-.catch(e=>alert(e.message));
-}
+  
+  }
 function loadFromCloud(){
 let user = auth.currentUser;
 if(!user) return;
@@ -379,12 +373,37 @@ loadSearchHospitals();
 });
 }
   
+function isValidEmail(email){
+return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
 function login(){
-let email = document.getElementById("email").value;
+let email = document.getElementById("email").value.trim();
 let password = document.getElementById("password").value;
+
+if(!isValidEmail(email)){
+return alert("Please enter a valid email (example@gmail.com)");
+}
 
 auth.signInWithEmailAndPassword(email,password)
 .then(()=>alert("Logged in!"))
+.catch(e=>alert(e.message));
+}
+
+function register(){
+let email = document.getElementById("email").value.trim();
+let password = document.getElementById("password").value;
+
+if(!isValidEmail(email)){
+return alert("Please enter a valid email (example@gmail.com)");
+}
+
+if(password.length < 6){
+return alert("Password must be at least 6 characters");
+}
+
+auth.createUserWithEmailAndPassword(email,password)
+.then(()=>alert("Registered!"))
 .catch(e=>alert(e.message));
 }
 auth.onAuthStateChanged(user=>{
